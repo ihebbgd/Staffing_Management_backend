@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: Staffing_Management_backend
+  data:
+    mongodb:
+      auto-index-creation: true
+  mongodb:
+    uri: "${MONGODB_URI:mongodb://localhost:27017/staffing_db}"
