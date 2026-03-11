@@ -1,12 +1,11 @@
 package com.demo.staffing_management_backend.model;
 
 import com.demo.staffing_management_backend.model.enums.UserRole;
-import com.demo.staffing_management_backend.model.enums.UserStatus;
+import com.demo.staffing_management_backend.model.enums.ProjectStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -29,7 +28,7 @@ public class User {
     private UserRole role= UserRole.EMPLOYEE;
 
     @Builder.Default
-    private UserStatus status = UserStatus.ACTIVE;
+    private ProjectStatus status = ProjectStatus.ACTIVE;
 
     private String employeeId;
 
