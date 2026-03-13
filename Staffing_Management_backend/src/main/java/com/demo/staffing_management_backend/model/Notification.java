@@ -18,6 +18,8 @@ public class Notification {
     @Id
     private String id;
 
+    private String recipientId;
+
     private String title;
 
     private String message;

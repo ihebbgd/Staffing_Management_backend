@@ -22,3 +22,9 @@ logging:
   level:
     org.springframework.security: INFO
     com.staffing.allocation: DEBUG
+
+app:
+  admin:
+    username: ${APP_ADMIN_USERNAME:admin}
+    email: ${APP_ADMIN_EMAIL:admin@staffing.local}
+    password: ${APP_ADMIN_PASSWORD}

@@ -1,6 +1,7 @@
 package com.demo.staffing_management_backend.dto;
 
 import com.demo.staffing_management_backend.model.enums.UserRole;
+import jakarta.validation.constraints.Email;
 
 public final class AuthDtos {
 
@@ -8,9 +9,8 @@ public final class AuthDtos {
     }
 
     public record RegisterRequest(String username,
-                                  String email,
-                                  String password,
-                                  UserRole role) {
+                                  @Email String email,
+                                  String password) {
 
     }
 

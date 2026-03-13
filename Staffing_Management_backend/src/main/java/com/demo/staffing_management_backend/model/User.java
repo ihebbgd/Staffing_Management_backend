@@ -1,6 +1,7 @@
 package com.demo.staffing_management_backend.model;
 
 import com.demo.staffing_management_backend.model.enums.UserRole;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +31,7 @@ public class User {
 
     private boolean enabled;
 
-    private Instant createdDate;
+    private Instant createdAt;
 
 
 }
