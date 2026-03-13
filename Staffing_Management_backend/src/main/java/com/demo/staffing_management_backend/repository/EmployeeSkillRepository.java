@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
-public interface EmployeeSkilRepository extends MongoRepository<EmployeeSkill, String> {
+public interface EmployeeSkillRepository extends MongoRepository<EmployeeSkill, String> {
     List<EmployeeSkill> findByEmployeeId(String employeeId);
     boolean existsByEmployeeIdAndSkillId(String employeeId, String skillId);
 }
