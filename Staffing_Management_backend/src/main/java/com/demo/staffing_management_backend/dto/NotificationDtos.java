@@ -2,7 +2,7 @@ package com.demo.staffing_management_backend.dto;
 
 import java.time.Instant;
 
-public class NotificationDtos {
+public final class NotificationDtos {
     private NotificationDtos() {}
 
     public record NotificationRequest(

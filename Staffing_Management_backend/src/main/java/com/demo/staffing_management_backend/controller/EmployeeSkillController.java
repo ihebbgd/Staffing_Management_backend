@@ -1,0 +1,62 @@
+package com.demo.staffing_management_backend.controller;
+
+import com.demo.staffing_management_backend.dto.EmployeeDtos;
+import com.demo.staffing_management_backend.dto.EmployeeSkillDtos;
+import com.demo.staffing_management_backend.service.EmployeeSkillService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/employee-skills")
+@SecurityRequirement(name = "bearerAuth")
+public class EmployeeSkillController {
+    private final EmployeeSkillService employeeSkillService;
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "Assign a skill to an employee")
+    public ResponseEntity<EmployeeSkillDtos.EmployeeSkillResponse> create(@RequestBody EmployeeSkillDtos.EmployeeSkillRequest request){
+        return ResponseEntity.status(HttpStatus.CREATED).body(employeeSkillService.create(request));
+    }
+
+    @GetMapping
+    @Operation(summary = "List all employee-skill links")
+    public ResponseEntity<List<EmployeeSkillDtos.EmployeeSkillResponse>> getAll() {
+        return ResponseEntity.ok(employeeSkillService.getAll());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get one employee-skill link by id")
+    public ResponseEntity<EmployeeSkillDtos.EmployeeSkillResponse> getById(@PathVariable String id) {
+        return ResponseEntity.ok(employeeSkillService.getById(id));
+    }
+
+    @GetMapping("/employee/{employeeId}")
+    @Operation(summary = "List all skills for one employee")
+    public ResponseEntity<List<EmployeeSkillDtos.EmployeeSkillResponse>> getByEmployee(@PathVariable String employeeId) {
+        return ResponseEntity.ok(employeeSkillService.getByEmployee(employeeId));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "Update a proficiency level")
+    public ResponseEntity<EmployeeSkillDtos.EmployeeSkillResponse> update(@PathVariable String id, @RequestBody EmployeeSkillDtos.EmployeeSkillRequest request) {
+        return ResponseEntity.ok(employeeSkillService.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "Remove a skill from an employee")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        employeeSkillService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}

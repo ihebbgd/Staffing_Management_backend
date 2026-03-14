@@ -1,6 +1,6 @@
 package com.demo.staffing_management_backend.dto;
 
-public class RecommendationDtos {
+public final class RecommendationDtos {
     private RecommendationDtos() {}
 
     public record FactorBreakdown(

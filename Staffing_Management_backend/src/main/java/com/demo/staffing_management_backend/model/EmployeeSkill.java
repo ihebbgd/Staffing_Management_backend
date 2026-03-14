@@ -20,5 +20,5 @@ public class EmployeeSkill {
 
     private String skillId;
 
-    private int proficiencylevel;
+    private int proficiencyLevel;
 }

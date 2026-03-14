@@ -48,7 +48,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete an employee ")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         employeeService.delete(id);
