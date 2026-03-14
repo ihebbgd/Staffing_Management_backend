@@ -31,7 +31,7 @@ public class Employee {
 
     private String department;
 
-    private double weeklyCpacityHours;
+    private double weeklyCapacityHours;
 
     private double yearsOfExperience;
 

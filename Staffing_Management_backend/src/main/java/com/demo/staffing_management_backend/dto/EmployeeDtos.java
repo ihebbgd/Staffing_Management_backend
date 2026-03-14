@@ -14,7 +14,7 @@ public final class EmployeeDtos {
                                    String department,
                                    double weeklyCapacityHours,
                                    double yearsOfExperience,
-                                   boolean active) {
+                                   Boolean active) {
     }
 
     public record EmployeeResponse(String id,
