@@ -26,7 +26,7 @@ public class Allocation {
 
     private String projectId;
 
-    private double allocatedHoursperweek;
+    private double allocatedHoursPerWeek;
 
     private LocalDate startDate;
 

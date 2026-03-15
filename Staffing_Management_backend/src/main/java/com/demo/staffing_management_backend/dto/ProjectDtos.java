@@ -16,7 +16,7 @@ public final class ProjectDtos {
                                  List<String> requiredSkillIds) {
     }
 
-    public record  ProjectResponse(String Id,
+    public record  ProjectResponse(String id,
                                    String name,
                                    String description,
                                    LocalDate startDate,
