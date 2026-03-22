@@ -6,6 +6,7 @@ import com.demo.staffing_management_backend.model.enums.CertificationStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+
 @Component
 public class CertificationMapper {
 
@@ -27,7 +28,6 @@ public class CertificationMapper {
         return new CertificationDtos.CertificationResponse(
                 c.getId(), c.getEmployeeId(), c.getName(), c.getIssuingOrganization(),
                 c.getSkillId(), c.getIssueDate(), c.getExpiryDate(),
-                computeStatus(c.getExpiryDate()), c.getCredentialId());
+                c.getStatus(), c.getCredentialId());
     }
 }
-

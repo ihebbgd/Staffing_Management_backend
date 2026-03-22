@@ -8,17 +8,23 @@ import com.demo.staffing_management_backend.model.Certification;
 import com.demo.staffing_management_backend.model.enums.CertificationStatus;
 import com.demo.staffing_management_backend.repository.CertificationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 import static com.demo.staffing_management_backend.Mappers.CertificationMapper.computeStatus;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CertificationService {
     private final CertificationRepository certificationRepository;
     private final EmployeeService employeeService;
+    private final NotificationService notificationService;
     private final CertificationMapper certificationMapper;
 
     public CertificationDtos.CertificationResponse create(CertificationDtos.CertificationRequest request) {
@@ -37,8 +43,8 @@ public class CertificationService {
         return certificationMapper.toResponse(certificationRepository.save(certification));
     }
 
-    public List<CertificationDtos.CertificationResponse> getAll() {
-        return certificationRepository.findAll().stream().map(certificationMapper::toResponse).toList();
+    public Page<CertificationDtos.CertificationResponse> getAll(Pageable pageable) {
+        return certificationRepository.findAll(pageable).map(certificationMapper::toResponse);
     }
 
     public CertificationDtos.CertificationResponse getById(String id) {
@@ -46,7 +52,8 @@ public class CertificationService {
     }
 
     public List<CertificationDtos.CertificationResponse> getByEmployee(String employeeId) {
-        return certificationRepository.findByEmployeeId(employeeId).stream().map(certificationMapper::toResponse).toList();
+        return certificationRepository.findByEmployeeId(employeeId).stream()
+                .map(certificationMapper::toResponse).toList();
     }
 
     public CertificationDtos.CertificationResponse update(String id, CertificationDtos.CertificationRequest request) {
@@ -72,10 +79,33 @@ public class CertificationService {
                 .filter(c -> computeStatus(c.getExpiryDate()) == CertificationStatus.ACTIVE).toList();
     }
 
+    @Scheduled(cron = "${app.certifications.refresh-cron:0 0 2 * * *}")
+    public void refreshStatuses() {
+        int updated = 0;
+        for (Certification c : certificationRepository.findAll()) {
+            CertificationStatus fresh = computeStatus(c.getExpiryDate());
+            if (fresh != c.getStatus()) {
+                CertificationStatus previous = c.getStatus();
+                c.setStatus(fresh);
+                certificationRepository.save(c);
+                updated++;
+                if (fresh == CertificationStatus.EXPIRING_SOON && previous != CertificationStatus.EXPIRING_SOON) {
+                    notificationService.createSystemNotification(
+                            c.getEmployeeId(),
+                            "Certification expiring soon",
+                            "Certification '" + c.getName() + "' expires on " + c.getExpiryDate(),
+                            "CERT_EXPIRY");
+                }
+            }
+        }
+        if (updated > 0) {
+            log.info("Refreshed status on {} certification(s).", updated);
+        }
+    }
 
     private Certification findOrThrow(String id) {
         return certificationRepository.findById(id)
-                .orElseThrow(()-> new ResourceNotFoundException("Certification not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Certification not found: " + id));
     }
 
     private void validate(CertificationDtos.CertificationRequest request) {
@@ -86,8 +116,4 @@ public class CertificationService {
             throw new BadRequestException("Certification name is required");
         }
     }
-
-
-
-
 }

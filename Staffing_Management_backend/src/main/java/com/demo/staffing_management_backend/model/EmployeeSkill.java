@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Builder
 @Document(collection = "employee_skills")
+@CompoundIndex(name = "emp_skill_uniq", def = "{'employeeId': 1, 'skillId': 1}", unique = true)
 public class EmployeeSkill {
     @Id
     private String id;

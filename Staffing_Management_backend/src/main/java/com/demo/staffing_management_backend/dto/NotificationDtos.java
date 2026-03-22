@@ -1,5 +1,7 @@
 package com.demo.staffing_management_backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 import java.time.Instant;
 
 public final class NotificationDtos {
@@ -7,7 +9,7 @@ public final class NotificationDtos {
 
     public record NotificationRequest(
             String recipientId,
-            String title,
+            @NotBlank String title,
             String message,
             String type) {
     }

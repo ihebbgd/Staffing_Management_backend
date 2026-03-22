@@ -5,7 +5,10 @@ import com.demo.staffing_management_backend.service.AllocationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,14 +27,14 @@ public class AllocationController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Create an allocation (assign an employee to a project)")
-    public ResponseEntity<AllocationDtos.AllocationResponse> create(@RequestBody AllocationDtos.AllocationRequest request) {
+    public ResponseEntity<AllocationDtos.AllocationResponse> create(@Valid @RequestBody AllocationDtos.AllocationRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(allocationService.create(request));
     }
 
     @GetMapping
-    @Operation(summary = "List all allocations")
-    public ResponseEntity<List<AllocationDtos.AllocationResponse>> getAll() {
-        return ResponseEntity.ok(allocationService.getAll());
+    @Operation(summary = "List a page of allocations")
+    public ResponseEntity<Page<AllocationDtos.AllocationResponse>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(allocationService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
@@ -49,7 +52,7 @@ public class AllocationController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Update an allocation")
-    public ResponseEntity<AllocationDtos.AllocationResponse> update(@PathVariable String id, @RequestBody AllocationDtos.AllocationRequest request) {
+    public ResponseEntity<AllocationDtos.AllocationResponse> update(@PathVariable String id, @Valid @RequestBody AllocationDtos.AllocationRequest request) {
         return ResponseEntity.ok(allocationService.update(id, request));
     }
 
@@ -68,9 +71,9 @@ public class AllocationController {
     }
 
     @GetMapping("/conflicts")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "List every employee whose active allocations exceed 100% capacity")
     public ResponseEntity<List<AllocationDtos.WorkloadResponse>> getConflicts() {
         return ResponseEntity.ok(allocationService.detectConflicts());
     }
-
 }

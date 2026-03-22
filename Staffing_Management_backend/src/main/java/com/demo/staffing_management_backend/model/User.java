@@ -1,11 +1,11 @@
 package com.demo.staffing_management_backend.model;
 
 import com.demo.staffing_management_backend.model.enums.UserRole;
-import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -19,7 +19,7 @@ public class User {
     private String id;
 
     @Indexed(unique = true)
-    private  String username;
+    private String username;
 
     @Indexed(unique = true)
     private String email;
@@ -27,12 +27,13 @@ public class User {
     private String password;
 
     @Builder.Default
-    private UserRole role= UserRole.EMPLOYEE;
+    private UserRole role = UserRole.EMPLOYEE;
 
     private boolean enabled;
 
+    @Builder.Default
+    private int tokenVersion = 0;
+
+    @CreatedDate
     private Instant createdAt;
-
-
 }
-

@@ -1,15 +1,29 @@
 spring:
   application:
     name: Staffing_Management_backend
+  mongodb:
+    uri: "${MONGODB_URI}"
   data:
     mongodb:
       auto-index-creation: true
-  mongodb:
-    uri: "${MONGODB_URI}"
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
 
 jwt:
   secret: "${JWT_SECRET}"
-  expiration: 86400000
+  access-expiration: 900000        # 15 minutes
+  refresh-expiration: 604800000    # 7 days
+
+recommendation:
+  experience-cap-years: 10
+  weights:
+    skill-match: 0.40
+    skill-level: 0.25
+    availability: 0.20
+    cert: 0.10
+    experience: 0.05
 
 springdoc:
   api-docs:
@@ -18,13 +32,22 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+
 logging:
   level:
     org.springframework.security: INFO
-    com.staffing.allocation: DEBUG
+    com.demo.staffing_management_backend: DEBUG
 
 app:
   admin:
     username: ${APP_ADMIN_USERNAME:admin}
     email: ${APP_ADMIN_EMAIL:admin@staffing.local}
     password: ${APP_ADMIN_PASSWORD}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  seed:
+    sample-data: ${APP_SEED_SAMPLE_DATA:false}
+    manager-password: ${APP_SEED_MANAGER_PASSWORD:Manager123!}
+    employee-password: ${APP_SEED_EMPLOYEE_PASSWORD:Employee123!}
+  certifications:
+    refresh-cron: "0 0 2 * * *"

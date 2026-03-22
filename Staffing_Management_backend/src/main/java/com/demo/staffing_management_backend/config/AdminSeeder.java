@@ -10,12 +10,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AdminSeeder implements CommandLineRunner {
+
+    private static final int MIN_ADMIN_PASSWORD_LENGTH = 12;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -35,6 +35,10 @@ public class AdminSeeder implements CommandLineRunner {
             log.info("Admin user '{}' already exists, skipping seed.", adminUsername);
             return;
         }
+        if (adminPassword == null || adminPassword.isBlank() || adminPassword.length() < MIN_ADMIN_PASSWORD_LENGTH) {
+            throw new IllegalStateException(
+                    "APP_ADMIN_PASSWORD must be set and at least " + MIN_ADMIN_PASSWORD_LENGTH + " characters long");
+        }
 
         User admin = User.builder()
                 .username(adminUsername)
@@ -42,7 +46,7 @@ public class AdminSeeder implements CommandLineRunner {
                 .password(passwordEncoder.encode(adminPassword))
                 .role(UserRole.ADMIN)
                 .enabled(true)
-                .createdAt(Instant.now())
+                .tokenVersion(0)
                 .build();
         userRepository.save(admin);
         log.info("Seeded initial ADMIN user '{}'.", adminUsername);

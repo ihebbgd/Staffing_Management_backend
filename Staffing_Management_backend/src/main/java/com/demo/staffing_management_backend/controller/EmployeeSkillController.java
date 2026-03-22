@@ -1,10 +1,11 @@
 package com.demo.staffing_management_backend.controller;
 
-import com.demo.staffing_management_backend.dto.EmployeeDtos;
 import com.demo.staffing_management_backend.dto.EmployeeSkillDtos;
 import com.demo.staffing_management_backend.service.EmployeeSkillService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +18,14 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/employee-skills")
 @SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Employee Skills", description = "Assign skills and proficiency levels to employees")
 public class EmployeeSkillController {
     private final EmployeeSkillService employeeSkillService;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Assign a skill to an employee")
-    public ResponseEntity<EmployeeSkillDtos.EmployeeSkillResponse> create(@RequestBody EmployeeSkillDtos.EmployeeSkillRequest request){
+    public ResponseEntity<EmployeeSkillDtos.EmployeeSkillResponse> create(@Valid @RequestBody EmployeeSkillDtos.EmployeeSkillRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(employeeSkillService.create(request));
     }
 
@@ -48,7 +50,7 @@ public class EmployeeSkillController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Update a proficiency level")
-    public ResponseEntity<EmployeeSkillDtos.EmployeeSkillResponse> update(@PathVariable String id, @RequestBody EmployeeSkillDtos.EmployeeSkillRequest request) {
+    public ResponseEntity<EmployeeSkillDtos.EmployeeSkillResponse> update(@PathVariable String id, @Valid @RequestBody EmployeeSkillDtos.EmployeeSkillRequest request) {
         return ResponseEntity.ok(employeeSkillService.update(id, request));
     }
 

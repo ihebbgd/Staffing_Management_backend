@@ -4,9 +4,14 @@ import com.demo.staffing_management_backend.Mappers.SkillMapper;
 import com.demo.staffing_management_backend.dto.SkillDtos;
 import com.demo.staffing_management_backend.exception.BadRequestException;
 import com.demo.staffing_management_backend.exception.ResourceNotFoundException;
+import com.demo.staffing_management_backend.model.Project;
 import com.demo.staffing_management_backend.model.Skill;
+import com.demo.staffing_management_backend.repository.EmployeeSkillRepository;
+import com.demo.staffing_management_backend.repository.ProjectRepository;
 import com.demo.staffing_management_backend.repository.SkillRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,39 +20,53 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SkillService {
     private final SkillRepository skillRepository;
-    private final SkillMapper SkillMapper;
+    private final EmployeeSkillRepository employeeSkillRepository;
+    private final ProjectRepository projectRepository;
+    private final SkillMapper skillMapper;
 
     public SkillDtos.SkillResponse create(SkillDtos.SkillRequest request) {
-        if(request.name() == null || request.name().isBlank()){
+        if (request.name() == null || request.name().isBlank()) {
             throw new BadRequestException("Skill name is required");
         }
         if (skillRepository.existsByName(request.name())) {
-            throw new BadRequestException("Skill already exists : "+request.name());
+            throw new BadRequestException("Skill already exists : " + request.name());
         }
-        Skill skill=Skill.builder()
+        Skill skill = Skill.builder()
                 .name(request.name())
                 .category(request.category())
                 .description(request.description())
                 .build();
-        return SkillMapper.toResponse(skillRepository.save(skill));
+        return skillMapper.toResponse(skillRepository.save(skill));
     }
-    public List<SkillDtos.SkillResponse> getall() {
-        return skillRepository.findAll().stream()
-                .map(SkillMapper::toResponse)
-                .toList();
+
+    public Page<SkillDtos.SkillResponse> getAll(Pageable pageable) {
+        return skillRepository.findAll(pageable).map(skillMapper::toResponse);
     }
+
     public SkillDtos.SkillResponse getById(String id) {
-        return  SkillMapper.toResponse(findOrThrow(id));
+        return skillMapper.toResponse(findOrThrow(id));
     }
+
     public SkillDtos.SkillResponse update(String id, SkillDtos.SkillRequest request) {
-        Skill skill=findOrThrow(id);
+        if (request.name() == null || request.name().isBlank()) {
+            throw new BadRequestException("Skill name is required");
+        }
+        Skill skill = findOrThrow(id);
         skill.setName(request.name());
         skill.setCategory(request.category());
         skill.setDescription(request.description());
-        return SkillMapper.toResponse(skillRepository.save(skill));
+        return skillMapper.toResponse(skillRepository.save(skill));
     }
+
     public void delete(String id) {
-        Skill skill=findOrThrow(id);
+        Skill skill = findOrThrow(id);
+        employeeSkillRepository.deleteBySkillId(id);
+        List<Project> referencingProjects = projectRepository.findByRequiredSkillIdsContaining(id);
+        for (Project project : referencingProjects) {
+            if (project.getRequiredSkillIds() != null && project.getRequiredSkillIds().remove(id)) {
+                projectRepository.save(project);
+            }
+        }
         skillRepository.delete(skill);
     }
 

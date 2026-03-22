@@ -1,6 +1,7 @@
 package com.demo.staffing_management_backend.dto;
 
 import com.demo.staffing_management_backend.model.enums.ProjectStatus;
+import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 public final class ProjectDtos {
     private ProjectDtos() {}
 
-    public record ProjectRequest(String name,
+    public record ProjectRequest(@NotBlank String name,
                                  String description,
                                  LocalDate startDate,
                                  LocalDate endDate,

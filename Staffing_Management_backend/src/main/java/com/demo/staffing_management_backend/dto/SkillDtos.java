@@ -1,9 +1,11 @@
 package com.demo.staffing_management_backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public final class SkillDtos {
     private  SkillDtos(){}
 
-    public record SkillRequest(String name,
+    public record SkillRequest(@NotBlank String name,
                                String category,
                                String description) {
     }

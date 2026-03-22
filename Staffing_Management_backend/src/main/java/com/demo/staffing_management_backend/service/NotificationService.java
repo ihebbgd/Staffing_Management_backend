@@ -7,10 +7,13 @@ import com.demo.staffing_management_backend.exception.ResourceNotFoundException;
 import com.demo.staffing_management_backend.model.Notification;
 import com.demo.staffing_management_backend.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -28,61 +31,56 @@ public class NotificationService {
                 .message(request.message())
                 .type(request.type())
                 .isRead(false)
-                .createdAt(Instant.now())
                 .build();
         return notificationMapper.toResponse(notificationRepository.save(notification));
     }
 
-    public Notification createSystemNotification(String recipientId, String title, String message,String type) {
-        Notification notification=Notification.builder()
+    public Notification createSystemNotification(String recipientId, String title, String message, String type) {
+        Notification notification = Notification.builder()
                 .recipientId(recipientId)
                 .title(title)
                 .message(message)
                 .type(type)
                 .isRead(false)
-                .createdAt(Instant.now())
                 .build();
         return notificationRepository.save(notification);
     }
 
-    public List<NotificationDtos.NotificationResponse> getAll() {
-        return notificationRepository.findAll().stream()
-                .map(notificationMapper::toResponse)
-                .toList();
+    public Page<NotificationDtos.NotificationResponse> getAll(Pageable pageable) {
+        return notificationRepository.findAll(pageable).map(notificationMapper::toResponse);
     }
 
-    public NotificationDtos.NotificationResponse getById(String id) {
-        return notificationMapper.toResponse(findOrThrow(id));
+    public NotificationDtos.NotificationResponse getForCaller(String id, String callerId, boolean privileged) {
+        Notification notification = findOrThrow(id);
+        ensureAccess(notification, callerId, privileged);
+        return notificationMapper.toResponse(notification);
     }
 
     public List<NotificationDtos.NotificationResponse> getByRecipient(String recipientId) {
-        return notificationRepository.findByRecipientId(recipientId).stream().map(notificationMapper::toResponse).toList();
+        return notificationRepository.findByRecipientId(recipientId).stream()
+                .map(notificationMapper::toResponse).toList();
     }
 
-    public NotificationDtos.NotificationResponse markAsRead(String id) {
+    public NotificationDtos.NotificationResponse markAsReadForCaller(String id, String callerId, boolean privileged) {
         Notification notification = findOrThrow(id);
+        ensureAccess(notification, callerId, privileged);
         notification.setRead(true);
         return notificationMapper.toResponse(notificationRepository.save(notification));
     }
+
     public void delete(String id) {
         Notification notification = findOrThrow(id);
         notificationRepository.delete(notification);
     }
 
-    private Notification findOrThrow(String id) {
-        return notificationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found : "+id));
+    private void ensureAccess(Notification notification, String callerId, boolean privileged) {
+        if (!privileged && !Objects.equals(notification.getRecipientId(), callerId)) {
+            throw new AccessDeniedException("You do not have access to this notification");
+        }
     }
 
-
-
-
-
-
-
-
-
-
-
+    private Notification findOrThrow(String id) {
+        return notificationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found : " + id));
+    }
 }
-

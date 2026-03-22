@@ -6,17 +6,20 @@ import com.demo.staffing_management_backend.exception.BadRequestException;
 import com.demo.staffing_management_backend.exception.ResourceNotFoundException;
 import com.demo.staffing_management_backend.model.Project;
 import com.demo.staffing_management_backend.model.enums.ProjectStatus;
+import com.demo.staffing_management_backend.repository.AllocationRepository;
 import com.demo.staffing_management_backend.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ProjectService {
     private final ProjectRepository projectRepository;
+    private final AllocationRepository allocationRepository;
     private final ProjectMapper projectMapper;
 
     public ProjectDtos.ProjectResponse create(ProjectDtos.ProjectRequest request) {
@@ -35,8 +38,9 @@ public class ProjectService {
                 .build();
         return projectMapper.toResponse(projectRepository.save(project));
     }
-    public List<ProjectDtos.ProjectResponse> getAll() {
-        return projectRepository.findAll().stream().map(projectMapper::toResponse).toList();
+
+    public Page<ProjectDtos.ProjectResponse> getAll(Pageable pageable) {
+        return projectRepository.findAll(pageable).map(projectMapper::toResponse);
     }
 
     public ProjectDtos.ProjectResponse getById(String id) {
@@ -63,12 +67,12 @@ public class ProjectService {
 
     public void delete(String id) {
         Project project = findOrThrow(id);
+        allocationRepository.deleteByProjectId(id);
         projectRepository.delete(project);
     }
 
     public Project findOrThrow(String id) {
-        return projectRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Project not found : " + id));
+        return projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found : " + id));
     }
-
-
 }

@@ -6,7 +6,10 @@ import com.demo.staffing_management_backend.service.CertificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/certifications")
-@SecurityRequirement(name="bearerAuth")
+@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Certification", description = "Manage employee certifications and expiry status")
 public class CertificationController {
     private final CertificationService certificationService;
@@ -25,14 +28,14 @@ public class CertificationController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Create a certification")
-    public ResponseEntity<CertificationDtos.CertificationResponse> create(@RequestBody CertificationDtos.CertificationRequest request) {
+    public ResponseEntity<CertificationDtos.CertificationResponse> create(@Valid @RequestBody CertificationDtos.CertificationRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(certificationService.create(request));
     }
 
     @GetMapping
-    @Operation(summary = "List all certifications")
-    public ResponseEntity<List<CertificationDtos.CertificationResponse>> getAll() {
-        return ResponseEntity.ok(certificationService.getAll());
+    @Operation(summary = "List a page of certifications")
+    public ResponseEntity<Page<CertificationDtos.CertificationResponse>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(certificationService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
@@ -50,7 +53,7 @@ public class CertificationController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Update a certification")
-    public ResponseEntity<CertificationDtos.CertificationResponse> update(@PathVariable String id, @RequestBody CertificationDtos.CertificationRequest request){
+    public ResponseEntity<CertificationDtos.CertificationResponse> update(@PathVariable String id, @Valid @RequestBody CertificationDtos.CertificationRequest request) {
         return ResponseEntity.ok(certificationService.update(id, request));
     }
 
