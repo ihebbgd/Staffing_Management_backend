@@ -33,6 +33,7 @@ public class CertificationController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "List a page of certifications")
     public ResponseEntity<Page<CertificationDtos.CertificationResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(certificationService.getAll(pageable));
@@ -45,7 +46,8 @@ public class CertificationController {
     }
 
     @GetMapping("/employee/{employeeId}")
-    @Operation(summary = "List all certifications for a given employee")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "List all certifications for a given employee (employees use /api/me/certifications)")
     public ResponseEntity<List<CertificationDtos.CertificationResponse>> getByEmployee(@PathVariable String employeeId) {
         return ResponseEntity.ok(certificationService.getByEmployee(employeeId));
     }

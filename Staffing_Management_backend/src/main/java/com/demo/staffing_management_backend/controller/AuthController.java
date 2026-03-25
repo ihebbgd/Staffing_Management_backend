@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,15 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
-@Tag(name = "Authentication", description = "Register, login, refresh and revoke JWT tokens")
+@Tag(name = "Authentication", description = "Login, refresh and revoke JWT tokens. Accounts are provisioned by admins, not self-registered.")
 public class AuthController {
     private final AuthService authService;
-
-    @PostMapping("/register")
-    @Operation(summary = "Register a new user and receive access + refresh tokens")
-    public ResponseEntity<AuthDtos.AuthResponse> register(@Valid @RequestBody AuthDtos.RegisterRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
-    }
 
     @PostMapping("/login")
     @Operation(summary = "Login and receive access + refresh tokens")

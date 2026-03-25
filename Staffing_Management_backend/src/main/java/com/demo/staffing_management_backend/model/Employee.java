@@ -21,7 +21,7 @@ public class Employee {
     @Id
     private String id;
 
-    @Indexed
+    @Indexed(unique = true, partialFilter = "{ 'userId': { $type: 'string' } }")
     private String userId;
 
     private String firstName;

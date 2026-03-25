@@ -30,6 +30,7 @@ public class EmployeeSkillController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "List all employee-skill links")
     public ResponseEntity<List<EmployeeSkillDtos.EmployeeSkillResponse>> getAll() {
         return ResponseEntity.ok(employeeSkillService.getAll());
@@ -42,7 +43,8 @@ public class EmployeeSkillController {
     }
 
     @GetMapping("/employee/{employeeId}")
-    @Operation(summary = "List all skills for one employee")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "List all skills for one employee (employees use /api/me/skills)")
     public ResponseEntity<List<EmployeeSkillDtos.EmployeeSkillResponse>> getByEmployee(@PathVariable String employeeId) {
         return ResponseEntity.ok(employeeSkillService.getByEmployee(employeeId));
     }

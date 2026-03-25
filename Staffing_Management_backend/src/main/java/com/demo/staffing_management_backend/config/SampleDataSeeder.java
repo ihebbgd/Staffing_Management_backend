@@ -136,8 +136,12 @@ public class SampleDataSeeder implements CommandLineRunner {
         // ---------- Login users (so you can test each role) ----------
         userRepository.save(User.builder().username("manager").email("manager@staffing.local")
                 .password(passwordEncoder.encode(managerPassword)).role(UserRole.MANAGER).enabled(true).createdAt(Instant.now()).build());
-        userRepository.save(User.builder().username("employee").email("employee@staffing.local")
+        User employeeUser = userRepository.save(User.builder().username("employee").email("employee@staffing.local")
                 .password(passwordEncoder.encode(employeePassword)).role(UserRole.EMPLOYEE).enabled(true).createdAt(Instant.now()).build());
+
+        // Link the demo 'employee' login to David so the personal dashboard (GET /api/me/*) works out of the box.
+        david.setUserId(employeeUser.getId());
+        employeeRepository.save(david);
 
         log.info("Sample data seeded. Backend project id = {}, Alice id = {}", backend.getId(), alice.getId());
     }

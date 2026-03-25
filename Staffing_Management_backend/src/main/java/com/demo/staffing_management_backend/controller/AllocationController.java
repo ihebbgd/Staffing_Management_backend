@@ -32,6 +32,7 @@ public class AllocationController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "List a page of allocations")
     public ResponseEntity<Page<AllocationDtos.AllocationResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(allocationService.getAll(pageable));
@@ -44,7 +45,8 @@ public class AllocationController {
     }
 
     @GetMapping("/employee/{employeeId}")
-    @Operation(summary = "List all allocations for a given employee")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "List all allocations for a given employee (employees use /api/me/allocations)")
     public ResponseEntity<List<AllocationDtos.AllocationResponse>> getByEmployee(@PathVariable String employeeId) {
         return ResponseEntity.ok(allocationService.getByEmployee(employeeId));
     }
@@ -65,7 +67,8 @@ public class AllocationController {
     }
 
     @GetMapping("/workload/{employeeId}")
-    @Operation(summary = "Get an employee's current workload / utilization percentage")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "Get an employee's current workload / utilization (employees use /api/me/workload)")
     public ResponseEntity<AllocationDtos.WorkloadResponse> getWorkload(@PathVariable String employeeId) {
         return ResponseEntity.ok(allocationService.getWorkload(employeeId));
     }

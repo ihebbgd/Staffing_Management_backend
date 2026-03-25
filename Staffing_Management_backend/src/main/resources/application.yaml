@@ -33,6 +33,17 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info   # only health (public) and info (authenticated) are exposed
+  endpoint:
+    health:
+      show-details: when-authorized   # anonymous sees status only; details require an authorized user
+  health:
+    mongodb:
+      enabled: false
 logging:
   level:
     org.springframework.security: INFO
@@ -44,7 +55,7 @@ app:
     email: ${APP_ADMIN_EMAIL:admin@staffing.local}
     password: ${APP_ADMIN_PASSWORD}
   cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:4200}
   seed:
     sample-data: ${APP_SEED_SAMPLE_DATA:false}
     manager-password: ${APP_SEED_MANAGER_PASSWORD:Manager123!}

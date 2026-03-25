@@ -12,6 +12,7 @@ public interface AllocationRepository extends MongoRepository<Allocation, String
     List<Allocation> findByEmployeeIdAndStatus(String employeeId, AllocationStatus status);
     List<Allocation> findByStatus(AllocationStatus status);
     List<Allocation> findByEmployeeIdInAndStatus(Collection<String> employeeIds, AllocationStatus status);
+    List<Allocation> findByProjectIdInAndStatus(Collection<String> projectIds, AllocationStatus status);
     void deleteByEmployeeId(String employeeId);
     void deleteByProjectId(String projectId);
 }

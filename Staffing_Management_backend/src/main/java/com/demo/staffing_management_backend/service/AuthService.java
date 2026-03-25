@@ -2,10 +2,8 @@ package com.demo.staffing_management_backend.service;
 
 import com.demo.staffing_management_backend.dto.AuthDtos;
 import com.demo.staffing_management_backend.exception.BadRequestException;
-import com.demo.staffing_management_backend.exception.DuplicateResourceException;
 import com.demo.staffing_management_backend.exception.ResourceNotFoundException;
 import com.demo.staffing_management_backend.model.User;
-import com.demo.staffing_management_backend.model.enums.UserRole;
 import com.demo.staffing_management_backend.repository.UserRepository;
 import com.demo.staffing_management_backend.security.JwtService;
 import com.demo.staffing_management_backend.security.LoginAttemptService;
@@ -15,7 +13,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,30 +20,10 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final AuthenticationManager authenticationManager;
     private final LoginAttemptService loginAttemptService;
-
-    public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
-            throw new DuplicateResourceException("Username already taken " + request.username());
-        }
-        if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateResourceException("Email already taken " + request.email());
-        }
-        User user = User.builder()
-                .username(request.username())
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .role(UserRole.EMPLOYEE)
-                .enabled(true)
-                .tokenVersion(0)
-                .build();
-        userRepository.save(user);
-        return buildAuthResponse(user);
-    }
 
     public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request) {
         if (loginAttemptService.isBlocked(request.username())) {
@@ -89,6 +66,7 @@ public class AuthService {
         }
     }
 
+    /** Invalidates all tokens previously issued to the user by bumping the token version. */
     public void logout(String username) {
         userRepository.findByUsername(username).ifPresent(user -> {
             user.setTokenVersion(user.getTokenVersion() + 1);
