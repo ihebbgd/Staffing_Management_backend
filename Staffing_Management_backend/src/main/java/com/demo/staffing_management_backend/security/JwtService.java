@@ -34,6 +34,9 @@ public class JwtService {
     @Value("${jwt.refresh-expiration:604800000}")
     private long refreshExpirationMs;
 
+    /** The signing key is derived once, at startup, from the Base64-decoded secret and reused for every token. */
+    private SecretKey signInKey;
+
     @PostConstruct
     void validateSecret() {
         if (secretKey == null || secretKey.isBlank()) {
@@ -43,11 +46,13 @@ public class JwtService {
         try {
             keyBytes = Decoders.BASE64.decode(secretKey);
         } catch (DecodingException ex) {
-            throw new IllegalStateException("jwt.secret must be a Base64-encoded value", ex);
+            throw new IllegalStateException("jwt.secret must be a Base64-encoded value "
+                    + "(generate one with: openssl rand -base64 48)", ex);
         }
         if (keyBytes.length < 32) {
             throw new IllegalStateException("jwt.secret must decode to at least 32 bytes (256 bits) for HS256");
         }
+        this.signInKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractUsername(String token) {
@@ -116,7 +121,6 @@ public class JwtService {
     }
 
     private SecretKey getSignInKey() {
-        final byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return signInKey;
     }
 }

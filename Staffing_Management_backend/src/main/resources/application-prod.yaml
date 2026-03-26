@@ -1,0 +1,18 @@
+# Production profile overrides. Activate with: SPRING_PROFILES_ACTIVE=prod
+#
+# Layered on top of application.yaml. Keeps the API surface identical while removing
+# development conveniences that are unsafe to expose in production.
+
+# Disable the OpenAPI schema and Swagger UI so the full endpoint map is not published
+# to unauthenticated callers. SecurityConfig also stops treating the doc paths as public
+# whenever springdoc.api-docs.enabled is false.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# Keep application logging at INFO (no request/entity payloads in logs).
+logging:
+  level:
+    com.demo.staffing_management_backend: INFO

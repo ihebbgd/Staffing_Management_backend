@@ -40,6 +40,7 @@ public class CertificationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Get one certification by id")
     public ResponseEntity<CertificationDtos.CertificationResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(certificationService.getById(id));

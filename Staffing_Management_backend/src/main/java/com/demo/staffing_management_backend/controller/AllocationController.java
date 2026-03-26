@@ -39,6 +39,7 @@ public class AllocationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Get one allocation by id")
     public ResponseEntity<AllocationDtos.AllocationResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(allocationService.getById(id));

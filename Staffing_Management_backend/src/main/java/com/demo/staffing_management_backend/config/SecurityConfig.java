@@ -46,15 +46,23 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins:http://localhost:3000}")
     private String[] allowedOrigins;
 
-    private static final String[] PUBLIC_PATHS = {
+    @Value("${springdoc.api-docs.enabled:true}")
+    private boolean apiDocsEnabled;
+
+    /** Always-public endpoints: authentication and the anonymous health probe. */
+    private static final String[] ALWAYS_PUBLIC_PATHS = {
             "/api/auth/**",
+            "/actuator/health",
+            "/actuator/health/**"
+    };
+
+    /** OpenAPI/Swagger endpoints, exposed anonymously only when API docs are enabled (i.e. not in prod). */
+    private static final String[] API_DOCS_PATHS = {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/swagger-resources/**",
-            "/webjars/**",
-            "/actuator/health",
-            "/actuator/health/**"
+            "/webjars/**"
     };
 
     @Bean
@@ -62,9 +70,13 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_PATHS).permitAll()
-                        .anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(ALWAYS_PUBLIC_PATHS).permitAll();
+                    if (apiDocsEnabled) {
+                        auth.requestMatchers(API_DOCS_PATHS).permitAll();
+                    }
+                    auth.anyRequest().authenticated();
+                })
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex

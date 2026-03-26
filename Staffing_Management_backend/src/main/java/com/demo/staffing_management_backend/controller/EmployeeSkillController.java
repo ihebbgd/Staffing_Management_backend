@@ -37,6 +37,7 @@ public class EmployeeSkillController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Get one employee-skill link by id")
     public ResponseEntity<EmployeeSkillDtos.EmployeeSkillResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(employeeSkillService.getById(id));

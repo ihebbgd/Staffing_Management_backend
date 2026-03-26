@@ -47,7 +47,8 @@ management:
 logging:
   level:
     org.springframework.security: INFO
-    com.demo.staffing_management_backend: DEBUG
+    # Production-safe default. Raise to DEBUG locally via the 'dev' profile or -Dlogging.level... when needed.
+    com.demo.staffing_management_backend: INFO
 
 app:
   admin:
