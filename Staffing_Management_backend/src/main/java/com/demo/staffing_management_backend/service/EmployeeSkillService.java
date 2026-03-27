@@ -2,7 +2,6 @@ package com.demo.staffing_management_backend.service;
 
 import com.demo.staffing_management_backend.Mappers.EmployeeSkillMapper;
 import com.demo.staffing_management_backend.dto.EmployeeSkillDtos;
-import com.demo.staffing_management_backend.exception.BadRequestException;
 import com.demo.staffing_management_backend.exception.DuplicateResourceException;
 import com.demo.staffing_management_backend.exception.ResourceNotFoundException;
 import com.demo.staffing_management_backend.model.EmployeeSkill;
@@ -21,7 +20,6 @@ public class EmployeeSkillService {
     private final EmployeeSkillMapper employeeSkillMapper;
 
     public EmployeeSkillDtos.EmployeeSkillResponse create(EmployeeSkillDtos.EmployeeSkillRequest request) {
-        validateProficiency(request.proficiencyLevel());
         employeeService.findOrThrow(request.employeeId());
         skillService.findOrThrow(request.skillId());
         if(employeeSkillRepository.existsByEmployeeIdAndSkillId(request.employeeId(), request.skillId())) {
@@ -48,7 +46,6 @@ public class EmployeeSkillService {
     }
 
     public EmployeeSkillDtos.EmployeeSkillResponse update(String id, EmployeeSkillDtos.EmployeeSkillRequest request) {
-        validateProficiency(request.proficiencyLevel());
         EmployeeSkill es=findOrThrow(id);
         es.setProficiencyLevel(request.proficiencyLevel());
         return employeeSkillMapper.toResponse(employeeSkillRepository.save(es));
@@ -63,12 +60,5 @@ public class EmployeeSkillService {
     private EmployeeSkill findOrThrow(String id) {
         return employeeSkillRepository.findById(id)
                 .orElseThrow(()-> new ResourceNotFoundException("EmployeeSkill not found: " + id));
-    }
-
-
-    private void validateProficiency(int Level) {
-        if (Level < 1 || Level > 5) {
-            throw new BadRequestException("Proficiency level must be between 1 and 5");
-        }
     }
 }

@@ -11,7 +11,9 @@ public final class EmployeeSkillDtos {
 
     public record EmployeeSkillRequest(@NotBlank String employeeId,
                                        @NotBlank String skillId,
-                                       @Min(1) @Max(5) int proficiencyLevel) {
+                                       @Min(value = 1, message = "Proficiency level must be between 1 and 5")
+                                       @Max(value = 5, message = "Proficiency level must be between 1 and 5")
+                                       int proficiencyLevel) {
     }
 
     public record EmployeeSkillResponse(String id,

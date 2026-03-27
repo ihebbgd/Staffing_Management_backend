@@ -3,8 +3,9 @@ package com.demo.staffing_management_backend.model;
 import com.demo.staffing_management_backend.model.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -12,7 +13,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+// Deliberately NOT @Data: no generated toString()/equals()/hashCode() so the password hash
+// can never be leaked through logging or accidental string interpolation of a User.
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @Document(collection = "users")
 public class User {
     @Id

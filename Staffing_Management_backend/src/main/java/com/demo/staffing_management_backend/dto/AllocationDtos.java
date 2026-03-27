@@ -1,6 +1,7 @@
 package com.demo.staffing_management_backend.dto;
 
 import com.demo.staffing_management_backend.model.enums.AllocationStatus;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
@@ -17,6 +18,11 @@ public final class AllocationDtos {
                                     LocalDate endDate,
                                     AllocationStatus status,
                                     String roleOnProject) {
+
+        @AssertTrue(message = "endDate must be on or after startDate")
+        public boolean isDateRangeValid() {
+            return startDate == null || endDate == null || !endDate.isBefore(startDate);
+        }
     }
 
     public record AllocationResponse(String id,
