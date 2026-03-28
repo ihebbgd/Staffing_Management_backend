@@ -124,10 +124,7 @@ public class AllocationService {
 
     public List<AllocationDtos.WorkloadResponse> detectConflicts() {
         LocalDate today = LocalDate.now();
-        Map<String, Double> hoursByEmployee = allocationRepository.findByStatus(AllocationStatus.ACTIVE).stream()
-                .filter(a -> WorkloadService.overlaps(a, today))
-                .collect(Collectors.groupingBy(Allocation::getEmployeeId,
-                        Collectors.summingDouble(Allocation::getAllocatedHoursPerWeek)));
+        Map<String, Double> hoursByEmployee = workloadService.activeHoursByEmployee(today);
 
         Map<String, Employee> employees = employeeRepository.findAllById(hoursByEmployee.keySet()).stream()
                 .collect(Collectors.toMap(Employee::getId, e -> e));
@@ -166,11 +163,7 @@ public class AllocationService {
         Map<String, Employee> employees = employeeRepository.findAllById(employeeIds).stream()
                 .collect(Collectors.toMap(Employee::getId, e -> e));
 
-        Map<String, Double> activeHours = allocationRepository
-                .findByEmployeeIdInAndStatus(employeeIds, AllocationStatus.ACTIVE).stream()
-                .filter(a -> WorkloadService.overlaps(a, today))
-                .collect(Collectors.groupingBy(Allocation::getEmployeeId,
-                        Collectors.summingDouble(Allocation::getAllocatedHoursPerWeek)));
+        Map<String, Double> activeHours = workloadService.activeHoursByEmployee(employeeIds, today);
 
         return allocations.stream().map(a -> {
             Employee employee = employees.get(a.getEmployeeId());

@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +38,10 @@ public class EmployeeService {
 
     /**
      * Employee-first onboarding: creating an employee always provisions the linked login.
-     * The User is created first; if persisting the employee then fails, the login is rolled back
-     * so a User can never exist without its Employee.
+     * Runs in a single MongoDB transaction, so if persisting the employee fails the login insert
+     * is rolled back automatically — a User can never exist without its Employee.
      */
+    @Transactional
     public EmployeeDtos.EmployeeCreationResponse create(EmployeeDtos.EmployeeCreateRequest request) {
         if (employeeRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("Email already exists : " + request.email());
@@ -69,25 +71,20 @@ public class EmployeeService {
                 .tokenVersion(0)
                 .build());
 
-        try {
-            Employee employee = employeeRepository.save(Employee.builder()
-                    .userId(user.getId())
-                    .firstName(request.firstName())
-                    .lastName(request.lastName())
-                    .email(request.email())
-                    .jobTitle(request.jobTitle())
-                    .department(request.department())
-                    .weeklyCapacityHours(request.weeklyCapacityHours())
-                    .yearsOfExperience(request.yearsOfExperience())
-                    .active(request.active() == null || request.active())
-                    .build());
-            auditService.record("CREATE_EMPLOYEE", "EMPLOYEE", employee.getId(), "username=" + username);
-            return new EmployeeDtos.EmployeeCreationResponse(
-                    employeeMapper.toResponse(employee), username, generated ? rawPassword : null);
-        } catch (RuntimeException ex) {
-            userRepository.deleteById(user.getId()); // compensate: never leave an orphan login
-            throw ex;
-        }
+        Employee employee = employeeRepository.save(Employee.builder()
+                .userId(user.getId())
+                .firstName(request.firstName())
+                .lastName(request.lastName())
+                .email(request.email())
+                .jobTitle(request.jobTitle())
+                .department(request.department())
+                .weeklyCapacityHours(request.weeklyCapacityHours())
+                .yearsOfExperience(request.yearsOfExperience())
+                .active(request.active() == null || request.active())
+                .build());
+        auditService.record("CREATE_EMPLOYEE", "EMPLOYEE", employee.getId(), "username=" + username);
+        return new EmployeeDtos.EmployeeCreationResponse(
+                employeeMapper.toResponse(employee), username, generated ? rawPassword : null);
     }
 
     public Page<EmployeeDtos.EmployeeResponse> getAll(Pageable pageable) {
@@ -118,7 +115,12 @@ public class EmployeeService {
         return employeeMapper.toResponse(employeeRepository.save(employee));
     }
 
-    /** Deletes the employee, its dependents, and the linked login (best-effort, dependents first). */
+    /**
+     * Deletes the employee, its dependents (skills, certifications, allocations), and the linked login.
+     * Runs in a single MongoDB transaction so the whole graph is removed atomically — a failure part-way
+     * through rolls everything back rather than leaving orphaned dependents or a ghost employee.
+     */
+    @Transactional
     public void delete(String id) {
         Employee employee = findOrThrow(id);
         employeeSkillRepository.deleteByEmployeeId(id);

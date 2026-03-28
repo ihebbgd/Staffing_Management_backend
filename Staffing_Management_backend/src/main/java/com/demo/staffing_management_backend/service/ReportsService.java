@@ -3,12 +3,9 @@ package com.demo.staffing_management_backend.service;
 import com.demo.staffing_management_backend.Mappers.CertificationMapper;
 import com.demo.staffing_management_backend.dto.CertificationDtos;
 import com.demo.staffing_management_backend.dto.ReportDtos;
-import com.demo.staffing_management_backend.model.Allocation;
 import com.demo.staffing_management_backend.model.Certification;
-import com.demo.staffing_management_backend.model.enums.AllocationStatus;
 import com.demo.staffing_management_backend.model.enums.CertificationStatus;
 import com.demo.staffing_management_backend.model.enums.UtilizationStatus;
-import com.demo.staffing_management_backend.repository.AllocationRepository;
 import com.demo.staffing_management_backend.repository.CertificationRepository;
 import com.demo.staffing_management_backend.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,17 +22,13 @@ import static com.demo.staffing_management_backend.Mappers.CertificationMapper.c
 @RequiredArgsConstructor
 public class ReportsService {
     private final EmployeeRepository employeeRepository;
-    private final AllocationRepository allocationRepository;
     private final CertificationRepository certificationRepository;
     private final CertificationMapper certificationMapper;
     private final WorkloadService workloadService;
 
     public List<ReportDtos.UtilizationReportRow> utilizationReport() {
         LocalDate today = LocalDate.now();
-        Map<String, Double> hoursByEmployee = allocationRepository.findByStatus(AllocationStatus.ACTIVE).stream()
-                .filter(a -> WorkloadService.overlaps(a, today))
-                .collect(Collectors.groupingBy(Allocation::getEmployeeId,
-                        Collectors.summingDouble(Allocation::getAllocatedHoursPerWeek)));
+        Map<String, Double> hoursByEmployee = workloadService.activeHoursByEmployee(today);
 
         return employeeRepository.findByActiveTrue().stream().map(employee -> {
             double capacity = employee.getWeeklyCapacityHours();

@@ -1,13 +1,10 @@
 package com.demo.staffing_management_backend.service;
 
 import com.demo.staffing_management_backend.dto.DashboardDtos;
-import com.demo.staffing_management_backend.model.Allocation;
 import com.demo.staffing_management_backend.model.Certification;
 import com.demo.staffing_management_backend.model.Employee;
-import com.demo.staffing_management_backend.model.enums.AllocationStatus;
 import com.demo.staffing_management_backend.model.enums.CertificationStatus;
 import com.demo.staffing_management_backend.model.enums.ProjectStatus;
-import com.demo.staffing_management_backend.repository.AllocationRepository;
 import com.demo.staffing_management_backend.repository.CertificationRepository;
 import com.demo.staffing_management_backend.repository.EmployeeRepository;
 import com.demo.staffing_management_backend.repository.ProjectRepository;
@@ -17,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.demo.staffing_management_backend.Mappers.CertificationMapper.computeStatus;
 
@@ -27,7 +23,6 @@ public class DashboardService {
     private static final int EXPIRY_WINDOW_60_DAYS = 60;
 
     private final EmployeeRepository employeeRepository;
-    private final AllocationRepository allocationRepository;
     private final CertificationRepository certificationRepository;
     private final ProjectRepository projectRepository;
     private final WorkloadService workloadService;
@@ -38,11 +33,8 @@ public class DashboardService {
         long totalEmployees = employeeRepository.count();
         List<Employee> activeEmployees = employeeRepository.findByActiveTrue();
 
-        // Active, currently-overlapping allocations grouped by employee (matches AllocationService).
-        Map<String, Double> hoursByEmployee = allocationRepository.findByStatus(AllocationStatus.ACTIVE).stream()
-                .filter(a -> WorkloadService.overlaps(a, today))
-                .collect(Collectors.groupingBy(Allocation::getEmployeeId,
-                        Collectors.summingDouble(Allocation::getAllocatedHoursPerWeek)));
+        // Active, currently-overlapping allocated hours per employee (single source of truth in WorkloadService).
+        Map<String, Double> hoursByEmployee = workloadService.activeHoursByEmployee(today);
 
         long allocatedEmployees = activeEmployees.stream()
                 .filter(employee -> hoursByEmployee.containsKey(employee.getId()))

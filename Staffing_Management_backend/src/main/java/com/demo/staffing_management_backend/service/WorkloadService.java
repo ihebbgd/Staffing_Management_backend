@@ -8,6 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +38,31 @@ public class WorkloadService {
                 .filter(a -> overlaps(a, asOf))
                 .mapToDouble(Allocation::getAllocatedHoursPerWeek)
                 .sum();
+    }
+
+    /**
+     * Currently-active allocated hours per employee across the whole organisation, keyed by employee id.
+     * "Active" = allocation status ACTIVE and the allocation window overlaps {@code asOf}. Employees with no
+     * such allocation are absent from the map (so {@code keySet()} is exactly the currently-allocated employees).
+     */
+    public Map<String, Double> activeHoursByEmployee(LocalDate asOf) {
+        return sumHoursByEmployee(allocationRepository.findByStatus(AllocationStatus.ACTIVE), asOf);
+    }
+
+    /** Same as {@link #activeHoursByEmployee(LocalDate)} but restricted to the given employee ids. */
+    public Map<String, Double> activeHoursByEmployee(Collection<String> employeeIds, LocalDate asOf) {
+        if (employeeIds.isEmpty()) {
+            return Map.of();
+        }
+        return sumHoursByEmployee(
+                allocationRepository.findByEmployeeIdInAndStatus(employeeIds, AllocationStatus.ACTIVE), asOf);
+    }
+
+    private Map<String, Double> sumHoursByEmployee(List<Allocation> activeAllocations, LocalDate asOf) {
+        return activeAllocations.stream()
+                .filter(a -> overlaps(a, asOf))
+                .collect(Collectors.groupingBy(Allocation::getEmployeeId,
+                        Collectors.summingDouble(Allocation::getAllocatedHoursPerWeek)));
     }
 
     public static boolean overlaps(Allocation allocation, LocalDate date) {

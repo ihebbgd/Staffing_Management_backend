@@ -4,14 +4,11 @@ import com.demo.staffing_management_backend.Mappers.CertificationMapper;
 import com.demo.staffing_management_backend.config.RecommendationProperties;
 import com.demo.staffing_management_backend.dto.RecommendationDtos;
 import com.demo.staffing_management_backend.exception.BadRequestException;
-import com.demo.staffing_management_backend.model.Allocation;
 import com.demo.staffing_management_backend.model.Certification;
 import com.demo.staffing_management_backend.model.Employee;
 import com.demo.staffing_management_backend.model.EmployeeSkill;
 import com.demo.staffing_management_backend.model.Project;
-import com.demo.staffing_management_backend.model.enums.AllocationStatus;
 import com.demo.staffing_management_backend.model.enums.CertificationStatus;
-import com.demo.staffing_management_backend.repository.AllocationRepository;
 import com.demo.staffing_management_backend.repository.CertificationRepository;
 import com.demo.staffing_management_backend.repository.EmployeeRepository;
 import com.demo.staffing_management_backend.repository.EmployeeSkillRepository;
@@ -38,7 +35,7 @@ public class RecommendationService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeSkillRepository employeeSkillRepository;
     private final CertificationRepository certificationRepository;
-    private final AllocationRepository allocationRepository;
+    private final WorkloadService workloadService;
     private final RecommendationProperties properties;
 
     public List<RecommendationDtos.RecommendationResult> recommendForProject(String projectId, int topN) {
@@ -63,11 +60,7 @@ public class RecommendationService {
         Map<String, List<Certification>> certsByEmployee = certificationRepository.findByEmployeeIdIn(employeeIds)
                 .stream().collect(Collectors.groupingBy(Certification::getEmployeeId));
         LocalDate today = LocalDate.now();
-        Map<String, Double> activeHoursByEmployee = allocationRepository
-                .findByEmployeeIdInAndStatus(employeeIds, AllocationStatus.ACTIVE).stream()
-                .filter(a -> WorkloadService.overlaps(a, today))
-                .collect(Collectors.groupingBy(Allocation::getEmployeeId,
-                        Collectors.summingDouble(Allocation::getAllocatedHoursPerWeek)));
+        Map<String, Double> activeHoursByEmployee = workloadService.activeHoursByEmployee(employeeIds, today);
 
         return activeEmployees.stream()
                 .map(e -> scoreEmployee(e, requiredSkillIds, requiredCount,
