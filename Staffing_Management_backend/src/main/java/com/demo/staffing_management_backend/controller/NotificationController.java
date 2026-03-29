@@ -18,7 +18,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Objects;
 
 @RestController
@@ -51,13 +50,14 @@ public class NotificationController {
     }
 
     @GetMapping("/recipient/{recipientId}")
-    @Operation(summary = "List all notifications for a given recipient (own, unless ADMIN/MANAGER)")
-    public ResponseEntity<List<NotificationDtos.NotificationResponse>> getByRecipient(@PathVariable String recipientId,
-                                                                                      @AuthenticationPrincipal AppUserPrincipal principal) {
+    @Operation(summary = "List a page of notifications for a given recipient (own, unless ADMIN/MANAGER)")
+    public ResponseEntity<Page<NotificationDtos.NotificationResponse>> getByRecipient(@PathVariable String recipientId,
+                                                                                      @AuthenticationPrincipal AppUserPrincipal principal,
+                                                                                      Pageable pageable) {
         if (!isPrivileged(principal) && !Objects.equals(recipientId, principal.getUserId())) {
             throw new AccessDeniedException("You may only view your own notifications");
         }
-        return ResponseEntity.ok(notificationService.getByRecipient(recipientId));
+        return ResponseEntity.ok(notificationService.getByRecipient(recipientId, pageable));
     }
 
     @PutMapping("/{id}/read")

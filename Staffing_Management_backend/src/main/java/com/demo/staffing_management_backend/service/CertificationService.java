@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.demo.staffing_management_backend.Mappers.CertificationMapper.computeStatus;
@@ -81,26 +82,33 @@ public class CertificationService {
 
     @Scheduled(cron = "${app.certifications.refresh-cron:0 0 2 * * *}")
     public void refreshStatuses() {
-        int updated = 0;
+        List<Certification> changed = new ArrayList<>();
+        List<Certification> newlyExpiringSoon = new ArrayList<>();
         for (Certification c : certificationRepository.findAll()) {
             CertificationStatus fresh = computeStatus(c.getExpiryDate());
             if (fresh != c.getStatus()) {
                 CertificationStatus previous = c.getStatus();
                 c.setStatus(fresh);
-                certificationRepository.save(c);
-                updated++;
+                changed.add(c);
                 if (fresh == CertificationStatus.EXPIRING_SOON && previous != CertificationStatus.EXPIRING_SOON) {
-                    notificationService.createSystemNotification(
-                            c.getEmployeeId(),
-                            "Certification expiring soon",
-                            "Certification '" + c.getName() + "' expires on " + c.getExpiryDate(),
-                            "CERT_EXPIRY");
+                    newlyExpiringSoon.add(c);
                 }
             }
         }
-        if (updated > 0) {
-            log.info("Refreshed status on {} certification(s).", updated);
+        if (changed.isEmpty()) {
+            return;
         }
+        // Single batched write instead of one save() per changed document.
+        certificationRepository.saveAll(changed);
+        // Notify only after the new statuses are persisted, so we never alert on an un-saved change.
+        for (Certification c : newlyExpiringSoon) {
+            notificationService.createSystemNotification(
+                    c.getEmployeeId(),
+                    "Certification expiring soon",
+                    "Certification '" + c.getName() + "' expires on " + c.getExpiryDate(),
+                    "CERT_EXPIRY");
+        }
+        log.info("Refreshed status on {} certification(s).", changed.size());
     }
 
     private Certification findOrThrow(String id) {

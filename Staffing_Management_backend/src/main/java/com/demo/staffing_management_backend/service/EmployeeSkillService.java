@@ -7,6 +7,8 @@ import com.demo.staffing_management_backend.exception.ResourceNotFoundException;
 import com.demo.staffing_management_backend.model.EmployeeSkill;
 import com.demo.staffing_management_backend.repository.EmployeeSkillRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,8 +35,8 @@ public class EmployeeSkillService {
         return employeeSkillMapper.toResponse(employeeSkillRepository.save(es));
     }
 
-    public List<EmployeeSkillDtos.EmployeeSkillResponse> getAll() {
-        return employeeSkillRepository.findAll().stream().map(employeeSkillMapper::toResponse).toList();
+    public Page<EmployeeSkillDtos.EmployeeSkillResponse> getAll(Pageable pageable) {
+        return employeeSkillRepository.findAll(pageable).map(employeeSkillMapper::toResponse);
     }
 
     public EmployeeSkillDtos.EmployeeSkillResponse getById(String id) {

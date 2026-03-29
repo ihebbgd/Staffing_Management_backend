@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -56,9 +55,8 @@ public class NotificationService {
         return notificationMapper.toResponse(notification);
     }
 
-    public List<NotificationDtos.NotificationResponse> getByRecipient(String recipientId) {
-        return notificationRepository.findByRecipientId(recipientId).stream()
-                .map(notificationMapper::toResponse).toList();
+    public Page<NotificationDtos.NotificationResponse> getByRecipient(String recipientId, Pageable pageable) {
+        return notificationRepository.findByRecipientId(recipientId, pageable).map(notificationMapper::toResponse);
     }
 
     public NotificationDtos.NotificationResponse markAsReadForCaller(String id, String callerId, boolean privileged) {

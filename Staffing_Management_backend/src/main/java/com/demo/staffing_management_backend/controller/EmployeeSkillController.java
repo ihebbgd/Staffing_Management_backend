@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,9 +33,9 @@ public class EmployeeSkillController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    @Operation(summary = "List all employee-skill links")
-    public ResponseEntity<List<EmployeeSkillDtos.EmployeeSkillResponse>> getAll() {
-        return ResponseEntity.ok(employeeSkillService.getAll());
+    @Operation(summary = "List a page of employee-skill links")
+    public ResponseEntity<Page<EmployeeSkillDtos.EmployeeSkillResponse>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(employeeSkillService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
