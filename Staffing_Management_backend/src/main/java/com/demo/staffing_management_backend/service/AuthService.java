@@ -25,18 +25,21 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final LoginAttemptService loginAttemptService;
 
-    public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request) {
-        if (loginAttemptService.isBlocked(request.username())) {
+    public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request, String clientIp) {
+        // Key throttling on username+IP so a single attacker IP is limited per account without
+        // letting anyone lock a victim out from an unrelated location (targeted-lockout DoS).
+        String attemptKey = request.username() + "|" + (clientIp != null ? clientIp : "unknown");
+        if (loginAttemptService.isBlocked(attemptKey)) {
             throw new BadRequestException("Too many failed login attempts. Please try again later.");
         }
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.username(), request.password()));
         } catch (BadCredentialsException ex) {
-            loginAttemptService.recordFailure(request.username());
+            loginAttemptService.recordFailure(attemptKey);
             throw ex;
         }
-        loginAttemptService.reset(request.username());
+        loginAttemptService.reset(attemptKey);
 
         User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found " + request.username()));

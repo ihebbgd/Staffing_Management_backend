@@ -18,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @Component
-@Profile("!prod")
+@Profile("!prod & !test")
 @ConditionalOnProperty(name = "app.seed.sample-data", havingValue = "true")
 @RequiredArgsConstructor
 public class SampleDataSeeder implements CommandLineRunner {
