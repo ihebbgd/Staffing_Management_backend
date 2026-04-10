@@ -14,6 +14,7 @@ import com.demo.staffing_management_backend.repository.EmployeeRepository;
 import com.demo.staffing_management_backend.repository.EmployeeSkillRepository;
 import com.demo.staffing_management_backend.repository.UserRepository;
 import com.demo.staffing_management_backend.security.PasswordGenerator;
+import com.demo.staffing_management_backend.security.PasswordPolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class EmployeeService {
-    private static final int MIN_LOGIN_PASSWORD_LENGTH = 8;
+    private static final int MIN_LOGIN_PASSWORD_LENGTH = PasswordPolicy.MIN_LENGTH;
     private static final int GENERATED_PASSWORD_LENGTH = 12;
 
     private final EmployeeRepository employeeRepository;
@@ -87,8 +88,12 @@ public class EmployeeService {
                 employeeMapper.toResponse(employee), username, generated ? rawPassword : null);
     }
 
-    public Page<EmployeeDtos.EmployeeResponse> getAll(Pageable pageable) {
-        return employeeRepository.findAll(pageable).map(employeeMapper::toResponse);
+    public Page<EmployeeDtos.EmployeeResponse> getAll(String search, Pageable pageable) {
+        String term = search == null ? "" : search.trim();
+        Page<Employee> page = term.isEmpty()
+                ? employeeRepository.findAll(pageable)
+                : employeeRepository.search(term, pageable);
+        return page.map(employeeMapper::toResponse);
     }
 
     public EmployeeDtos.EmployeeResponse getById(String id) {
