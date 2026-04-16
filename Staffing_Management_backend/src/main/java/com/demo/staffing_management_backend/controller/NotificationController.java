@@ -42,6 +42,21 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getAll(pageable));
     }
 
+    @GetMapping("/me")
+    @Operation(summary = "List the authenticated user's own notifications, newest first")
+    public ResponseEntity<Page<NotificationDtos.NotificationResponse>> getMine(
+            @AuthenticationPrincipal AppUserPrincipal principal, Pageable pageable) {
+        return ResponseEntity.ok(notificationService.getMine(principal.getUserId(), pageable));
+    }
+
+    @GetMapping("/me/unread-count")
+    @Operation(summary = "Count the authenticated user's unread notifications")
+    public ResponseEntity<NotificationDtos.UnreadCountResponse> myUnreadCount(
+            @AuthenticationPrincipal AppUserPrincipal principal) {
+        return ResponseEntity.ok(new NotificationDtos.UnreadCountResponse(
+                notificationService.countUnread(principal.getUserId())));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get one notification by id (own notifications, unless ADMIN/MANAGER)")
     public ResponseEntity<NotificationDtos.NotificationResponse> getById(@PathVariable String id,

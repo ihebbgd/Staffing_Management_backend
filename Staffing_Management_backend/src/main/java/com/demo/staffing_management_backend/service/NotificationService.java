@@ -59,6 +59,16 @@ public class NotificationService {
         return notificationRepository.findByRecipientId(recipientId, pageable).map(notificationMapper::toResponse);
     }
 
+    /** The caller's own notifications, newest first. */
+    public Page<NotificationDtos.NotificationResponse> getMine(String userId, Pageable pageable) {
+        return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId, pageable)
+                .map(notificationMapper::toResponse);
+    }
+
+    public long countUnread(String userId) {
+        return notificationRepository.countUnreadByRecipientId(userId);
+    }
+
     public NotificationDtos.NotificationResponse markAsReadForCaller(String id, String callerId, boolean privileged) {
         Notification notification = findOrThrow(id);
         ensureAccess(notification, callerId, privileged);

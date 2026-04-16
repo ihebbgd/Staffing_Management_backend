@@ -30,12 +30,14 @@ public class ProjectController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "List a page of projects")
     public ResponseEntity<Page<ProjectDtos.ProjectResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(projectService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Get one project by id")
     public ResponseEntity<ProjectDtos.ProjectResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(projectService.getById(id));

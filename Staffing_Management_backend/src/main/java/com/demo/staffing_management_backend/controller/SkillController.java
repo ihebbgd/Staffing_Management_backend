@@ -30,12 +30,14 @@ public class SkillController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Get a page of skills")
     public ResponseEntity<Page<SkillDtos.SkillResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(skillService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Get a skill by id")
     public ResponseEntity<SkillDtos.SkillResponse> getById(@PathVariable String id) {
         return ResponseEntity.ok(skillService.getById(id));

@@ -31,9 +31,10 @@ public class EmployeeController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    @Operation(summary = "Get a page of employees")
-    public ResponseEntity<Page<EmployeeDtos.EmployeeResponse>> getAll(Pageable pageable) {
-        return ResponseEntity.ok(employeeService.getAll(pageable));
+    @Operation(summary = "Get a page of employees (optionally filtered by name/email/department/title search)")
+    public ResponseEntity<Page<EmployeeDtos.EmployeeResponse>> getAll(
+            @RequestParam(required = false) String search, Pageable pageable) {
+        return ResponseEntity.ok(employeeService.getAll(search, pageable));
     }
 
     @GetMapping("/{id}")

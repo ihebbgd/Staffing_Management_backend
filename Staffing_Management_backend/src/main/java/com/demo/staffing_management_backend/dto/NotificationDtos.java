@@ -23,4 +23,7 @@ public final class NotificationDtos {
             boolean read,
             Instant createdAt) {
     }
+
+    public record UnreadCountResponse(long count) {
+    }
 }
