@@ -52,6 +52,11 @@ public class SkillService {
             throw new BadRequestException("Skill name is required");
         }
         Skill skill = findOrThrow(id);
+        // Renaming to a name already used by another skill would violate the unique index — reject
+        // it up front with a clear message rather than surfacing a generic duplicate-key error.
+        if (!skill.getName().equals(request.name()) && skillRepository.existsByName(request.name())) {
+            throw new BadRequestException("Skill already exists : " + request.name());
+        }
         skill.setName(request.name());
         skill.setCategory(request.category());
         skill.setDescription(request.description());

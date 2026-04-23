@@ -1,6 +1,7 @@
 package com.demo.staffing_management_backend.dto;
 
 import com.demo.staffing_management_backend.model.enums.CertificationStatus;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
@@ -15,6 +16,11 @@ public final class CertificationDtos {
                                        LocalDate issueDate,
                                        LocalDate expiryDate,
                                        String credentialId) {
+
+        @AssertTrue(message = "expiryDate must be on or after issueDate")
+        public boolean isDateRangeValid() {
+            return issueDate == null || expiryDate == null || !expiryDate.isBefore(issueDate);
+        }
     }
 
     public record CertificationResponse(String id,

@@ -60,12 +60,20 @@ public class DashboardService {
         long activeProjects = projectRepository.countByStatus(ProjectStatus.ACTIVE);
 
         List<Certification> certifications = certificationRepository.findAll();
-        long expiredCertifications = certifications.stream()
-                .filter(c -> computeStatus(c.getExpiryDate()) == CertificationStatus.EXPIRED).count();
-        long expiringIn30Days = certifications.stream()
-                .filter(c -> computeStatus(c.getExpiryDate()) == CertificationStatus.EXPIRING_SOON).count();
-        long expiringIn60Days = certifications.stream()
-                .filter(c -> expiringWithin(c.getExpiryDate(), today, EXPIRY_WINDOW_60_DAYS)).count();
+        long expiredCertifications = 0;
+        long expiringIn30Days = 0;
+        long expiringIn60Days = 0;
+        for (Certification c : certifications) {
+            CertificationStatus status = computeStatus(c.getExpiryDate()); // computed once per certification
+            if (status == CertificationStatus.EXPIRED) {
+                expiredCertifications++;
+            } else if (status == CertificationStatus.EXPIRING_SOON) {
+                expiringIn30Days++;
+            }
+            if (expiringWithin(c.getExpiryDate(), today, EXPIRY_WINDOW_60_DAYS)) {
+                expiringIn60Days++;
+            }
+        }
 
         return new DashboardDtos.StatsResponse(totalEmployees, activeEmployees.size(), benchCount,
                 benchPercentage, allocatedEmployees, activeProjects, averageUtilizationPercent,

@@ -11,7 +11,6 @@ import com.demo.staffing_management_backend.repository.AllocationRepository;
 import com.demo.staffing_management_backend.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -53,9 +52,10 @@ public class AllocationService {
         Allocation saved = allocationRepository.save(allocation);
         double utilization = workloadService.utilizationPercent(employee);
         boolean over = utilization > 100.0;
-        if (over) {
-            String recipient = employee.getUserId() != null ? employee.getUserId() : employee.getId();
-            notificationService.createSystemNotification(recipient, "Over-allocation warning",
+        // Notifications are addressed to a user account; skip when the employee has no linked login
+        // (an employee id is not a valid notification recipient and would never be delivered).
+        if (over && employee.getUserId() != null) {
+            notificationService.createSystemNotification(employee.getUserId(), "Over-allocation warning",
                     "Employee " + employee.getFirstName() + " " + employee.getLastName()
                             + " is now allocated to " + utilization + "% of weekly capacity",
                     "ALLOCATION_CONFLICT");
@@ -65,8 +65,9 @@ public class AllocationService {
 
     public Page<AllocationDtos.AllocationResponse> getAll(Pageable pageable) {
         Page<Allocation> page = allocationRepository.findAll(pageable);
-        List<AllocationDtos.AllocationResponse> content = mapWithUtilization(page.getContent());
-        return new PageImpl<>(content, pageable, page.getTotalElements());
+        UtilizationView utilization = utilizationFor(page.getContent());
+        // Map through Page so pagination metadata is preserved without building a bare PageImpl.
+        return page.map(utilization::toResponse);
     }
 
     public AllocationDtos.AllocationResponse getById(String id) {
@@ -77,7 +78,9 @@ public class AllocationService {
     }
 
     public List<AllocationDtos.AllocationResponse> getByEmployee(String employeeId) {
-        return mapWithUtilization(allocationRepository.findByEmployeeId(employeeId));
+        List<Allocation> allocations = allocationRepository.findByEmployeeId(employeeId);
+        UtilizationView utilization = utilizationFor(allocations);
+        return allocations.stream().map(utilization::toResponse).toList();
     }
 
     public AllocationDtos.AllocationResponse update(String id, AllocationDtos.AllocationRequest request) {
@@ -151,28 +154,38 @@ public class AllocationService {
         return conflicts;
     }
 
-    private List<AllocationDtos.AllocationResponse> mapWithUtilization(List<Allocation> allocations) {
+    /** Batch-loads the employees and their active hours for a set of allocations, once. */
+    private UtilizationView utilizationFor(List<Allocation> allocations) {
         if (allocations.isEmpty()) {
-            return List.of();
+            return new UtilizationView(Map.of(), Map.of());
         }
-        LocalDate today = LocalDate.now();
         Set<String> employeeIds = allocations.stream()
                 .map(Allocation::getEmployeeId)
                 .collect(Collectors.toSet());
-
         Map<String, Employee> employees = employeeRepository.findAllById(employeeIds).stream()
                 .collect(Collectors.toMap(Employee::getId, e -> e));
+        Map<String, Double> activeHours = workloadService.activeHoursByEmployee(employeeIds, LocalDate.now());
+        return new UtilizationView(employees, activeHours);
+    }
 
-        Map<String, Double> activeHours = workloadService.activeHoursByEmployee(employeeIds, today);
+    /** Precomputed utilization context: maps one allocation to its response with the over-allocation flag. */
+    private final class UtilizationView {
+        private final Map<String, Employee> employees;
+        private final Map<String, Double> activeHours;
 
-        return allocations.stream().map(a -> {
-            Employee employee = employees.get(a.getEmployeeId());
+        private UtilizationView(Map<String, Employee> employees, Map<String, Double> activeHours) {
+            this.employees = employees;
+            this.activeHours = activeHours;
+        }
+
+        private AllocationDtos.AllocationResponse toResponse(Allocation allocation) {
+            Employee employee = employees.get(allocation.getEmployeeId());
             double capacity = employee != null ? employee.getWeeklyCapacityHours() : 0.0;
             double percent = capacity > 0
-                    ? workloadService.round1(activeHours.getOrDefault(a.getEmployeeId(), 0.0) / capacity * 100.0)
+                    ? workloadService.round1(activeHours.getOrDefault(allocation.getEmployeeId(), 0.0) / capacity * 100.0)
                     : 0.0;
-            return allocationMapper.toResponse(a, percent > 100.0, percent);
-        }).toList();
+            return allocationMapper.toResponse(allocation, percent > 100.0, percent);
+        }
     }
 
     private Allocation findOrThrow(String id) {

@@ -5,8 +5,10 @@ import com.demo.staffing_management_backend.dto.CertificationDtos;
 import com.demo.staffing_management_backend.exception.BadRequestException;
 import com.demo.staffing_management_backend.exception.ResourceNotFoundException;
 import com.demo.staffing_management_backend.model.Certification;
+import com.demo.staffing_management_backend.model.Employee;
 import com.demo.staffing_management_backend.model.enums.CertificationStatus;
 import com.demo.staffing_management_backend.repository.CertificationRepository;
+import com.demo.staffing_management_backend.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.demo.staffing_management_backend.Mappers.CertificationMapper.computeStatus;
 
@@ -25,6 +29,7 @@ import static com.demo.staffing_management_backend.Mappers.CertificationMapper.c
 public class CertificationService {
     private final CertificationRepository certificationRepository;
     private final EmployeeService employeeService;
+    private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
     private final CertificationMapper certificationMapper;
 
@@ -101,14 +106,35 @@ public class CertificationService {
         // Single batched write instead of one save() per changed document.
         certificationRepository.saveAll(changed);
         // Notify only after the new statuses are persisted, so we never alert on an un-saved change.
-        for (Certification c : newlyExpiringSoon) {
+        notifyExpiringSoon(newlyExpiringSoon);
+        log.info("Refreshed status on {} certification(s).", changed.size());
+    }
+
+    /**
+     * Notifications are addressed to a user account, so resolve each certification's employee to its
+     * linked userId (batched, one query) and skip any employee without a login. Sending to a raw
+     * employee id would never reach the intended recipient.
+     */
+    private void notifyExpiringSoon(List<Certification> certifications) {
+        if (certifications.isEmpty()) {
+            return;
+        }
+        List<String> employeeIds = certifications.stream()
+                .map(Certification::getEmployeeId).distinct().toList();
+        Map<String, String> userIdByEmployeeId = employeeRepository.findAllById(employeeIds).stream()
+                .filter(e -> e.getUserId() != null)
+                .collect(Collectors.toMap(Employee::getId, Employee::getUserId, (a, b) -> a));
+        for (Certification c : certifications) {
+            String recipientUserId = userIdByEmployeeId.get(c.getEmployeeId());
+            if (recipientUserId == null) {
+                continue;
+            }
             notificationService.createSystemNotification(
-                    c.getEmployeeId(),
+                    recipientUserId,
                     "Certification expiring soon",
                     "Certification '" + c.getName() + "' expires on " + c.getExpiryDate(),
                     "CERT_EXPIRY");
         }
-        log.info("Refreshed status on {} certification(s).", changed.size());
     }
 
     private Certification findOrThrow(String id) {

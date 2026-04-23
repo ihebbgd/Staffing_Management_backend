@@ -12,6 +12,7 @@ public final class AuditLogDtos {
                                    String action,
                                    String targetType,
                                    String targetId,
+                                   String targetName,
                                    Instant timestamp,
                                    String details) {
     }
