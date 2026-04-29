@@ -1,0 +1,17 @@
+# Test-profile overrides. Activated by @ActiveProfiles("test") on integration tests so the suite
+# never depends on developer secrets and never runs the seeders (see @Profile("!test")).
+jwt:
+  secret: "dGVzdC1vbmx5LWp3dC1zZWNyZXQtbm90LWZvci1wcm9kdWN0aW9uLTMyKw=="
+
+app:
+  admin:
+    password: "test-only-admin-password"
+  seed:
+    sample-data: false
+
+spring:
+  mongodb:
+    uri: "mongodb://localhost:27017/staffing-management-test"
+  data:
+    mongodb:
+      auto-index-creation: false
